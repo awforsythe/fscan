@@ -45,15 +45,7 @@ class BackgroundJob(QObject):
         g.log.info('- FSCAN_TESTVAR: %s' % testvar_value)
         g.log.info("- message: '%s'" % message_value)
 
-        i = 0
         while not self.exit_requested:
-            i += 1
-            if i < 5:
-                g.log.info('I am doing work in the background!')
-            elif i == 5:
-                g.log.warning('Help! I\'m about to crash!')
-            else:
-                raise RuntimeError('Oh no! A crash!')
             time.sleep(2.0)
 
         self.finished.emit()
