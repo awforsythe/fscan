@@ -1,8 +1,8 @@
 import os
 
-from PySide2.QtCore import Qt, Slot
-from PySide2.QtWidgets import QTextEdit, QMenu, QAction
-from PySide2.QtGui import QTextCursor, QKeySequence, QTextOption
+from PySide6.QtCore import Qt, Slot
+from PySide6.QtWidgets import QTextEdit, QMenu
+from PySide6.QtGui import QTextCursor, QKeySequence, QTextOption, QAction
 
 from .. import g
 from ..richtexthandler import RichTextHandlerObject, RichTextHandler

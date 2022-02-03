@@ -4,8 +4,8 @@ import time
 import socket
 import traceback
 
-from PySide2.QtCore import QObject, QThread, Signal, Slot
-from PySide2.QtWidgets import QApplication, QMessageBox
+from PySide6.QtCore import QObject, QThread, Signal, Slot
+from PySide6.QtWidgets import QApplication, QMessageBox
 
 from . import g
 from .version import VERSION
