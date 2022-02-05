@@ -1,49 +1,50 @@
 import os
 import re
 import sys
-import yaml
+
+COMMENT_REGEX = re.compile(r';.*')
+VALUE_REGEX = re.compile(r'\s*([A-Za-z_\-]+)\s*=(.*)')
 
 __config__ = None
 
 
-def get_config_yaml_path():
+def _get_fscan_ini_path():
     if hasattr(sys, 'frozen'):
-        return os.path.join(os.path.dirname(sys.executable), 'config.yaml')
+        return os.path.join(os.path.dirname(sys.executable), 'fscan.ini')
     else:
-        return os.path.normpath(os.path.join(os.path.dirname(__file__), '..', 'config.yaml'))
+        return os.path.normpath(os.path.join(os.path.dirname(__file__), '..', 'fscan.ini'))
 
 
-def get_config():
+def _merge_config_from_file(filepath, out_dict):
+    with open(filepath) as fp:
+        for line in fp:
+            comment_match = COMMENT_REGEX.match(line)
+            if comment_match:
+                line = line[:comment_match.span()[0]]
+            value_match = VALUE_REGEX.match(line)
+            if value_match:
+                key = value_match.group(1)
+                value = value_match.group(2).strip()
+                out_dict[key] = value
+
+
+def _get_config():
     global __config__
     if __config__ is None:
+        __config__ = {}
 
-        # Load defaults from config.yaml that's distributed with the application
-        with open(get_config_yaml_path()) as fp:
-            data = yaml.safe_load(fp)
+        # Load defaults from the fscan.ini that's distributed with the application
+        _merge_config_from_file(_get_fscan_ini_path(), __config__)
 
-        # 'env' is a special case: perform environment variable lookups to initialize these config variables
-        if 'env' in data:
-            for config_var_name, values in data['env'].items():
-                assert config_var_name not in data
-                assert len(values) == 2
-                env_var_name, default = values
-                data[config_var_name] = os.getenv(env_var_name, default)
-            del data['env']
-
-        # Initialize the module-level config object with the application config
-        __config__ = data
-
-        # If the user has a ~/.FScan/config.yaml file, patch in overridden values from it
-        user_config = os.path.join(os.path.expanduser('~'), '.FScan', 'config.yaml')
+        # If the user has a ~/fscan.ini file, patch in overridden values from it
+        user_config = os.path.join(os.path.expanduser('~'), 'fscan.ini')
         if os.path.isfile(user_config):
-            with open(user_config) as fp:
-                user_data = yaml.safe_load(fp)
-            for k, v in user_data.items():
-                if k != 'env':
-                    __config__[k] = v
+            _merge_config_from_file(user_config, __config__)
 
     return __config__
 
 
 def get_config_var(name, default=None):
-    return get_config().get(name, default)
+    if name in os.environ:
+        return os.environ[name]
+    return _get_config().get(name, default)

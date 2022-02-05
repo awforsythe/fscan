@@ -49,6 +49,8 @@ class MainApplication(QApplication):
         controls = self.main.w.controls
         controls.scan.scanRequested.connect(lambda: self.scan_worker.requestScan())
 
+        g.log.info(get_config_var('SOME_CONFIG_VAR', 'defualtvar'))
+
         if True:
             self.scan_worker.crashed.connect(self.onThreadCrash)
             self.scan_worker.moveToThread(self.scan_thread)

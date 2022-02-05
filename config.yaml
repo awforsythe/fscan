@@ -1,4 +1,0 @@
-env:
-  testvar: ['FSCAN_TESTVAR', 'default from config.yaml']
-
-message: 'hello world'
