@@ -1,7 +1,7 @@
 import os
 
-from PySide6.QtCore import Qt, Slot
-from PySide6.QtWidgets import QTextEdit, QMenu
+from PySide6.QtCore import Qt, Slot, QSize
+from PySide6.QtWidgets import QTextEdit, QMenu, QSizePolicy
 from PySide6.QtGui import QTextCursor, QKeySequence, QTextOption, QAction
 
 from .. import g
@@ -26,6 +26,7 @@ class ConsoleWidget(QTextEdit):
                 border: 0;
                 white-space: pre;
             }''')
+        self.setSizePolicy(QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred))
 
         self.handlerObj = RichTextHandlerObject()
         self.handler = RichTextHandler(self.handlerObj)
@@ -38,6 +39,9 @@ class ConsoleWidget(QTextEdit):
         self.actionScrollToEnd = QAction('Scroll to &End', self, statusTip='Move the cursor to the end of the output', triggered=self.scrollToEnd)
         self.actionWordWrap = QAction('&Word Wrap', self, statusTip='Toggle word wrap', checkable=True, triggered=self.toggleWordWrap)
         self.actionClear = QAction('C&lear', self, statusTip='Clear the output window', triggered=self.clear)
+
+    def sizeHint(self):
+        return QSize(800, 160)
 
     @Slot(str)
     def write(self, line):
