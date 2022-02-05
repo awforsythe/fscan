@@ -12,43 +12,9 @@ from .version import VERSION
 from .resources import Resources
 from .loggers import ConsoleLogger
 from .config import get_config_var
+from .state.scan import ScanWorker
 from .gui.darkpalette import DarkPalette
 from .gui.mainwindow import MainWindow
-
-
-class BackgroundJob(QObject):
-
-    finished = Signal()
-    crashed = Signal(str)
-
-    def __init__(self):
-        super().__init__()
-        self.exit_requested = False
-
-    @Slot()
-    def start(self):
-        try:
-            self.run()
-        except Exception:
-            self.crashed.emit(traceback.format_exc())
-
-    @Slot()
-    def stop(self):
-        self.exit_requested = True
-
-    def run(self):
-        g.log.info('FScan v%s | %s | %s' % (VERSION, time.strftime('%r | %A, %B %d, %Y'), socket.gethostname()))
-        g.log.debug('Running from %s%s' % (sys.executable, ' (frozen)' if hasattr(sys, 'frozen') else ''))
-
-        testvar_value = get_config_var('testvar', 'hardcoded fallback')
-        message_value = get_config_var('message', '')
-        g.log.info('- FSCAN_TESTVAR: %s' % testvar_value)
-        g.log.info("- message: '%s'" % message_value)
-
-        while not self.exit_requested:
-            time.sleep(2.0)
-
-        self.finished.emit()
 
 
 class MainApplication(QApplication):
@@ -77,24 +43,28 @@ class MainApplication(QApplication):
         self.exceptionDialog = None
         sys.excepthook = self.handleGlobalException
 
-        self.thread = QThread()
-        self.job = BackgroundJob()
+        self.scan_thread = QThread()
+        self.scan_worker = ScanWorker()
+
+        controls = self.main.w.controls
+        controls.scan.scanRequested.connect(lambda: self.scan_worker.requestScan())
+
         if True:
-            self.job.crashed.connect(self.onThreadCrash)
-            self.job.moveToThread(self.thread)
-            self.job.finished.connect(self.thread.quit)
-            self.thread.started.connect(self.job.start)
-            self.thread.finished.connect(self.quit)
+            self.scan_worker.crashed.connect(self.onThreadCrash)
+            self.scan_worker.moveToThread(self.scan_thread)
+            self.scan_worker.finished.connect(self.scan_thread.quit)
+            self.scan_thread.started.connect(self.scan_worker.start)
+            self.scan_thread.finished.connect(self.quit)
             self.aboutToQuit.connect(self.onUserQuit)
-            self.thread.start()
+            self.scan_thread.start()
         else:
-            self.job.run()
+            self.scan_worker.run()
 
     def onUserQuit(self):
-        if self.thread and self.job:
-            self.job.stop()
-            self.thread.quit()
-            self.thread.wait()
+        if self.scan_thread and self.scan_worker:
+            self.scan_worker.stop()
+            self.scan_thread.quit()
+            self.scan_thread.wait()
 
     def onThreadCrash(self, s):
         lines = ['A problem has occurred and this application must exit.', '']

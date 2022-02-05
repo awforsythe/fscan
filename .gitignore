@@ -5,3 +5,6 @@ __pycache__/*
 # pyinstaller generated
 build/*
 dist/*
+
+# Portable installation of NAPS2
+/naps2/*

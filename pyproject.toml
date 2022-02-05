@@ -9,6 +9,7 @@ python = ">=3.9,<3.11"
 PyYAML = "^6.0"
 colorama = "^0.4.4"
 PySide6 = "^6.2.3"
+requests = "^2.27.1"
 
 [tool.poetry.dev-dependencies]
 pyinstaller = "^4.8"
