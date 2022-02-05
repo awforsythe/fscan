@@ -49,7 +49,11 @@ class MainApplication(QApplication):
         controls = self.main.w.controls
         controls.scan.scanRequested.connect(lambda: self.scan_worker.requestScan())
 
-        g.log.info(get_config_var('SOME_CONFIG_VAR', 'defualtvar'))
+        g.log.info('FScan v%s | %s | %s' % (VERSION, time.strftime('%r | %A, %B %d, %Y'), socket.gethostname()))
+        g.log.debug('Running from %s%s' % (sys.executable, ' (frozen)' if hasattr(sys, 'frozen') else ''))
+        for var_name in ['NAPS2_APP_DIR', 'NAPS2_DATA_DIR']:
+            var_value = get_config_var(var_name)
+            g.log.debug('- %s: %s' % (var_name, repr(var_value)))
 
         if True:
             self.scan_worker.crashed.connect(self.onThreadCrash)

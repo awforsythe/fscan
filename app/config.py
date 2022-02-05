@@ -3,7 +3,7 @@ import re
 import sys
 
 COMMENT_REGEX = re.compile(r';.*')
-VALUE_REGEX = re.compile(r'\s*([A-Za-z_\-]+)\s*=(.*)')
+VALUE_REGEX = re.compile(r'\s*([0-9A-Za-z_\-]+)\s*=(.*)')
 
 __config__ = None
 
@@ -18,7 +18,7 @@ def _get_fscan_ini_path():
 def _merge_config_from_file(filepath, out_dict):
     with open(filepath) as fp:
         for line in fp:
-            comment_match = COMMENT_REGEX.match(line)
+            comment_match = COMMENT_REGEX.search(line)
             if comment_match:
                 line = line[:comment_match.span()[0]]
             value_match = VALUE_REGEX.match(line)
