@@ -4,34 +4,15 @@ import zipfile
 import subprocess
 import requests
 import urllib.request
-from dataclasses import dataclass
 from typing import Optional
 
-from .. import g
-from ..config import get_config_var, update_config
-from .process import run_process
+from ... import g
+from ...config import get_config_var, update_config
+from .data import NAPS2Install
 
 GITHUB_API_HEADERS = {'Accept': 'application/vnd.github.v3+json'}
 NAPS2_GITHUB_API_URL = 'https://api.github.com/repos/cyanfish/naps2/releases/latest'
 NAPS2_ASSET_FILENAME_PATTERN = 'naps2-%s-portable.zip'
-
-
-@dataclass
-class NAPS2Install:
-    """
-    Represents an installation of NAPS2 (portable or non-portable) that we've confirmed
-    is available locally on this system.
-    """
-    app_dir: str  # Directory containing NAPS2.exe and NAPS2.Console.exe
-    data_dir: str # Directory containing profiles.xml
-
-    @property
-    def is_portable(self) -> bool:
-        app_parent_dir, app_dirname = os.path.split(self.app_dir)
-        data_parent_dir, data_dirname = os.path.split(self.data_dir)
-        if app_dirname.lower() == 'app' and data_dirname.lower() == 'data':
-            return os.path.normpath(app_parent_dir).lower() == os.path.normpath(data_parent_dir).lower()
-        return False
 
 
 def _capitalize_drive_letter(s):
@@ -44,7 +25,7 @@ def _get_binary_dir() -> str:
     if hasattr(sys, 'frozen'):
         return _capitalize_drive_letter(os.path.dirname(sys.executable))
     else:
-        return _capitalize_drive_letter(os.path.normpath(os.path.join(os.path.dirname(__file__), '..', '..')))
+        return _capitalize_drive_letter(os.path.normpath(os.path.join(os.path.dirname(__file__), '..', '..', '..')))
 
 
 def _normalize_config_path(path: str) -> str:
@@ -243,16 +224,3 @@ def install_naps2_portable() -> Optional[NAPS2Install]:
 
     g.log.info('Installed NAPS2 v%s Portable to %s.' % (release_name, install_dirpath))
     return NAPS2Install(os.path.join(install_dirpath, 'App'), os.path.join(install_dirpath, 'Data'))
-
-
-def invoke_naps2_scan(install, profile_name, output_filepath):
-    console_exe_path = os.path.join(install.app_dir, 'NAPS2.Console.exe')
-    args = [console_exe_path, '-v', '-p', profile_name, '-o', output_filepath]
-
-    g.log.info("Invoking NAPS2.Console.exe with profile '%s'..." % profile_name)
-    exitcode = run_process(args)
-    if exitcode != 0:
-        raise RuntimeError('NAPS2.Console.exe failed with exit code %d' % exitcode)
-    if not os.path.isfile(output_filepath):
-        raise RuntimeError('NAPS2.Console.exe failed to write file: %s' % output_filepath)
-    g.log.info('Scan finished.')

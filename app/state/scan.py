@@ -8,15 +8,9 @@ from PySide6.QtCore import QObject, Signal, Slot
 
 from .. import g
 from ..config import get_config_var
-from ..core.naps2 import (
-    NAPS2Install,
-    disable_naps2,
-    set_configured_naps2_install,
-    get_configured_naps2_install,
-    get_suggested_naps2_install,
-    install_naps2_portable,
-    invoke_naps2_scan,
-)
+from ..core.naps2.data import NAPS2Install
+from ..core.naps2.install import disable_naps2, set_configured_naps2_install, get_configured_naps2_install, get_suggested_naps2_install, install_naps2_portable
+from ..core.naps2.scan import invoke_naps2_scan
 
 class ScanWorkerState(Enum):
     UNINITIALIZED = 1  # No NAPS2 paths have been configured

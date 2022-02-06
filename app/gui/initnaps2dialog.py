@@ -5,7 +5,8 @@ from PySide6.QtCore import Qt, Signal, QSize
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel, QGroupBox, QPushButton, QGridLayout, QLineEdit, QFileDialog, QMessageBox
 
 from .. import g
-from ..core.naps2 import NAPS2Install, get_naps2_portable_install_path, get_naps2_default_app_dir, get_naps2_default_data_dir
+from ..core.naps2.data import NAPS2Install
+from ..core.naps2.install import get_naps2_portable_install_path, get_naps2_default_app_dir, get_naps2_default_data_dir
 
 
 class InitNAPS2Dialog(QDialog):
