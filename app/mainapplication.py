@@ -15,6 +15,7 @@ from .config import get_config_var
 from .state.scan import ScanWorker
 from .gui.darkpalette import DarkPalette
 from .gui.mainwindow import MainWindow
+from .gui.initnaps2dialog import InitNAPS2Dialog
 
 
 class MainApplication(QApplication):
@@ -45,15 +46,15 @@ class MainApplication(QApplication):
 
         self.scan_thread = QThread()
         self.scan_worker = ScanWorker()
+        self.scan_worker.promptInstallRequested.connect(self.onPromptInstall)
 
         controls = self.main.w.controls
         controls.scan.scanRequested.connect(lambda: self.scan_worker.requestScan())
 
+        self.init_naps2_dialog = None
+
         g.log.info('FScan v%s | %s | %s' % (VERSION, time.strftime('%r | %A, %B %d, %Y'), socket.gethostname()))
         g.log.debug('Running from %s%s' % (sys.executable, ' (frozen)' if hasattr(sys, 'frozen') else ''))
-        for var_name in ['NAPS2_APP_DIR', 'NAPS2_DATA_DIR']:
-            var_value = get_config_var(var_name)
-            g.log.debug('- %s: %s' % (var_name, repr(var_value)))
 
         if True:
             self.scan_worker.crashed.connect(self.onThreadCrash)
@@ -71,6 +72,43 @@ class MainApplication(QApplication):
             self.scan_worker.stop()
             self.scan_thread.quit()
             self.scan_thread.wait()
+
+    def onPromptInstall(self, suggested_install):
+        if suggested_install:
+            g.log.debug('Found existing %s installation:' % ('portable' if suggested_install.is_portable else 'standard'))
+            g.log.debug(' App: %s' % suggested_install.app_dir)
+            g.log.debug('Data: %s' % suggested_install.data_dir)
+        else:
+            g.log.debug('No existing NAPS2 installation found.')
+        self.showInitNAPS2Dialog(suggested_install)
+
+    def showInitNAPS2Dialog(self, install):
+        if self.init_naps2_dialog:
+            return
+
+        self.init_naps2_dialog = InitNAPS2Dialog(install)
+        self.init_naps2_dialog.onSelectAutoInstall.connect(self.onSelectAutoInstall)
+        self.init_naps2_dialog.onSelectManualInstall.connect(self.onSelectManualInstall)
+        self.init_naps2_dialog.onSelectDisable.connect(self.onSelectDisable)
+        self.init_naps2_dialog.show()
+
+    def onSelectAutoInstall(self):
+        if self.init_naps2_dialog:
+            self.init_naps2_dialog.close()
+            self.init_naps2_dialog = None
+            self.scan_worker.autoInstallNAPS2()
+
+    def onSelectManualInstall(self, install):
+        if self.init_naps2_dialog:
+            self.init_naps2_dialog.close()
+            self.init_naps2_dialog = None
+            self.scan_worker.setNAPS2Install(install)
+
+    def onSelectDisable(self):
+        if self.init_naps2_dialog:
+            self.init_naps2_dialog.close()
+            self.init_naps2_dialog = None
+            self.scan_worker.disableNAPS2()
 
     def onThreadCrash(self, s):
         lines = ['A problem has occurred and this application must exit.', '']
