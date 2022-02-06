@@ -39,6 +39,9 @@ class InitScanCommand:
             worker.promptInstallRequested.emit(suggested_install)
             return
 
+        # Configure
+        worker.setInstall(install)
+
 
 @dataclass
 class DisableScanCommand:
@@ -68,18 +71,56 @@ class AutoInstallCommand:
         worker.command_queue.put(SetInstallCommand(install))
 
 
+@dataclass
+class ScanCommand:
+    def run(self, worker):
+        if not worker.install:
+            g.log.warning('Scan command ignored! NAPS2 integration not configured.')
+            return
+        if worker.is_scanning:
+            g.log.warning('Scan command ignored! Scanning already in progress.')
+            return
+
+        worker.is_scanning = True
+        worker.canScanChanged.emit(worker.canScan)
+        g.log.info('Scan!')
+        time.sleep(1)
+        g.log.info('3 seconds remaining...')
+        time.sleep(1)
+        g.log.info('2 seconds remaining...')
+        time.sleep(1)
+        g.log.info('1 second remaining...')
+        time.sleep(1)
+        g.log.info('Done!')
+        worker.is_scanning = False
+        worker.canScanChanged.emit(worker.canScan)
+
+
 class ScanWorker(QObject):
     finished = Signal()
     crashed = Signal(str)
 
     promptInstallRequested = Signal(object)
 
+    canScanChanged = Signal(bool)
+
     def __init__(self):
         super().__init__()
         self.exit_requested = False
         self.command_queue = Queue()
         self.command_queue.put(InitScanCommand())
+
         self.install = None
+        self.is_scanning = False
+
+    def setInstall(self, install):
+        assert not self.is_scanning
+        self.install = install
+        self.canScanChanged.emit(self.canScan)
+
+    @property
+    def canScan(self):
+        return self.install is not None and not self.is_scanning
 
     @Slot()
     def start(self):
@@ -102,7 +143,7 @@ class ScanWorker(QObject):
         self.command_queue.put(AutoInstallCommand())
     
     def requestScan(self):
-        pass
+        self.command_queue.put(ScanCommand())
 
     def run(self):
         while True:

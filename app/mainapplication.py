@@ -51,6 +51,9 @@ class MainApplication(QApplication):
         controls = self.main.w.controls
         controls.scan.scanRequested.connect(lambda: self.scan_worker.requestScan())
 
+        controls.scan.button_scan.setEnabled(self.scan_worker.canScan)
+        self.scan_worker.canScanChanged.connect(controls.scan.button_scan.setEnabled)
+
         self.init_naps2_dialog = None
 
         g.log.info('FScan v%s | %s | %s' % (VERSION, time.strftime('%r | %A, %B %d, %Y'), socket.gethostname()))
