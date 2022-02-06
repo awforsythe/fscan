@@ -33,3 +33,6 @@ Name: "{commondesktop}\FScan"; Filename: "{app}\FScan.exe"; Tasks: desktopicon
 
 [Run]
 Filename: "{app}\FScan.exe"; Description: "{cm:LaunchProgram,FScan}"; Flags: nowait postinstall
+
+[UninstallDelete]
+Type: filesandordirs; Name: "{app}\naps2"
