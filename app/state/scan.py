@@ -15,6 +15,7 @@ from ..core.naps2 import (
     get_configured_naps2_install,
     get_suggested_naps2_install,
     install_naps2_portable,
+    invoke_naps2_scan,
 )
 
 class ScanWorkerState(Enum):
@@ -99,15 +100,7 @@ class ScanCommand:
 
         worker.is_scanning = True
         worker.stateChanged.emit(worker.state)
-        g.log.info('Scan!')
-        time.sleep(1)
-        g.log.info('3 seconds remaining...')
-        time.sleep(1)
-        g.log.info('2 seconds remaining...')
-        time.sleep(1)
-        g.log.info('1 second remaining...')
-        time.sleep(1)
-        g.log.info('Done!')
+        invoke_naps2_scan(worker.install, 'TEST', 'E:\\fscan_files\\test\\scan_001.png')
         worker.is_scanning = False
         worker.stateChanged.emit(worker.state)
 
