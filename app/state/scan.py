@@ -1,5 +1,6 @@
 import time
 import traceback
+from enum import Enum
 from dataclasses import dataclass
 from queue import Queue
 
@@ -16,6 +17,11 @@ from ..core.naps2 import (
     install_naps2_portable,
 )
 
+class ScanWorkerState(Enum):
+    UNINITIALIZED = 1  # No NAPS2 paths have been configured
+    READY_TO_SCAN = 2  # Configured and idle, ready to begin a new scan
+    SCANNING = 3       # Currently running a scan
+
 
 @dataclass
 class ExitCommand:
@@ -25,6 +31,7 @@ class ExitCommand:
 @dataclass
 class InitScanCommand:
     def run(self, worker):
+        worker.setInstall(None)
         is_disabled = get_config_var('NAPS2_DISABLED', 'false').lower() in ('true', '1')
         if is_disabled:
             g.log.info('NAPS2 scanning is disabled. Remove NAPS2_DISABLED from ~/fscan.ini to re-enable.')
@@ -41,6 +48,15 @@ class InitScanCommand:
 
         # Configure
         worker.setInstall(install)
+
+
+@dataclass
+class ConfigureScanCommand:
+    def run(self, worker):
+        install: Optional[NAPS2Install] = get_configured_naps2_install()
+        if not install:
+            install = get_suggested_naps2_install()
+        worker.promptInstallRequested.emit(install)
 
 
 @dataclass
@@ -82,7 +98,7 @@ class ScanCommand:
             return
 
         worker.is_scanning = True
-        worker.canScanChanged.emit(worker.canScan)
+        worker.stateChanged.emit(worker.state)
         g.log.info('Scan!')
         time.sleep(1)
         g.log.info('3 seconds remaining...')
@@ -93,7 +109,7 @@ class ScanCommand:
         time.sleep(1)
         g.log.info('Done!')
         worker.is_scanning = False
-        worker.canScanChanged.emit(worker.canScan)
+        worker.stateChanged.emit(worker.state)
 
 
 class ScanWorker(QObject):
@@ -102,7 +118,7 @@ class ScanWorker(QObject):
 
     promptInstallRequested = Signal(object)
 
-    canScanChanged = Signal(bool)
+    stateChanged = Signal(object)
 
     def __init__(self):
         super().__init__()
@@ -112,15 +128,17 @@ class ScanWorker(QObject):
 
         self.install = None
         self.is_scanning = False
+    
+    @property
+    def state(self):
+        if not self.install:
+            return ScanWorkerState.UNINITIALIZED
+        return ScanWorkerState.SCANNING if self.is_scanning else ScanWorkerState.READY_TO_SCAN
 
     def setInstall(self, install):
-        assert not self.is_scanning
+        assert self.state != ScanWorkerState.SCANNING
         self.install = install
-        self.canScanChanged.emit(self.canScan)
-
-    @property
-    def canScan(self):
-        return self.install is not None and not self.is_scanning
+        self.stateChanged.emit(self.state)
 
     @Slot()
     def start(self):
@@ -142,6 +160,9 @@ class ScanWorker(QObject):
     def autoInstallNAPS2(self):
         self.command_queue.put(AutoInstallCommand())
     
+    def requestConfigure(self):
+        self.command_queue.put(ConfigureScanCommand())
+
     def requestScan(self):
         self.command_queue.put(ScanCommand())
 

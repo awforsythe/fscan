@@ -49,10 +49,9 @@ class MainApplication(QApplication):
         self.scan_worker.promptInstallRequested.connect(self.onPromptInstall)
 
         controls = self.main.w.controls
-        controls.scan.scanRequested.connect(lambda: self.scan_worker.requestScan())
-
-        controls.scan.button_scan.setEnabled(self.scan_worker.canScan)
-        self.scan_worker.canScanChanged.connect(controls.scan.button_scan.setEnabled)
+        controls.scan.configureRequested.connect(self.onConfigureRequested)
+        controls.scan.scanRequested.connect(self.onScanRequested)
+        self.scan_worker.stateChanged.connect(controls.scan.onScanWorkerStateChanged)
 
         self.init_naps2_dialog = None
 
@@ -85,6 +84,12 @@ class MainApplication(QApplication):
             g.log.debug('No existing NAPS2 installation found.')
         self.showInitNAPS2Dialog(suggested_install)
 
+    def onConfigureRequested(self):
+        self.scan_worker.requestConfigure()
+    
+    def onScanRequested(self):
+        self.scan_worker.requestScan()
+
     def showInitNAPS2Dialog(self, install):
         if self.init_naps2_dialog:
             return
@@ -93,7 +98,11 @@ class MainApplication(QApplication):
         self.init_naps2_dialog.onSelectAutoInstall.connect(self.onSelectAutoInstall)
         self.init_naps2_dialog.onSelectManualInstall.connect(self.onSelectManualInstall)
         self.init_naps2_dialog.onSelectDisable.connect(self.onSelectDisable)
+        self.init_naps2_dialog.finished.connect(self.onInitNAPS2DialogClosed)
         self.init_naps2_dialog.show()
+
+    def onInitNAPS2DialogClosed(self):
+        self.init_naps2_dialog = None
 
     def onSelectAutoInstall(self):
         if self.init_naps2_dialog:
