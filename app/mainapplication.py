@@ -97,7 +97,6 @@ class MainApplication(QApplication):
         self.init_naps2_dialog = InitNAPS2Dialog(install)
         self.init_naps2_dialog.onSelectAutoInstall.connect(self.onSelectAutoInstall)
         self.init_naps2_dialog.onSelectManualInstall.connect(self.onSelectManualInstall)
-        self.init_naps2_dialog.onSelectDisable.connect(self.onSelectDisable)
         self.init_naps2_dialog.finished.connect(self.onInitNAPS2DialogClosed)
         self.init_naps2_dialog.show()
 
@@ -115,12 +114,6 @@ class MainApplication(QApplication):
             self.init_naps2_dialog.close()
             self.init_naps2_dialog = None
             self.scan_worker.setNAPS2Install(install)
-
-    def onSelectDisable(self):
-        if self.init_naps2_dialog:
-            self.init_naps2_dialog.close()
-            self.init_naps2_dialog = None
-            self.scan_worker.disableNAPS2()
 
     def onThreadCrash(self, s):
         lines = ['A problem has occurred and this application must exit.', '']

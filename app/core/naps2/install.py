@@ -50,16 +50,6 @@ def get_naps2_default_data_dir() -> str:
     return os.path.join(appdata_dir, 'NAPS2')
 
 
-def disable_naps2():
-    """
-    Adds NAPS2_DISABLED=true to the user config file, indicating that the user doesn't
-    want to use the program's NAPS2 scanning functionality at all.
-    """
-    update_config({
-        'NAPS2_DISABLED': 'true',
-    })
-
-
 def set_configured_naps2_install(install: NAPS2Install):
     binary_dir = _get_binary_dir()
 
@@ -72,7 +62,6 @@ def set_configured_naps2_install(install: NAPS2Install):
         data_dir = '.' + os.sep + data_dir[len(binary_dir):].lstrip(os.sep)
 
     update_config({
-        'NAPS2_DISABLED': None,
         'NAPS2_APP_DIR': app_dir,
         'NAPS2_DATA_DIR': data_dir,
     })

@@ -13,7 +13,6 @@ class InitNAPS2Dialog(QDialog):
 
     onSelectAutoInstall = Signal()
     onSelectManualInstall = Signal(object)
-    onSelectDisable = Signal()
 
     def __init__(self, install):
         super().__init__()
@@ -114,18 +113,6 @@ class InitNAPS2Dialog(QDialog):
         self.button_manual_install.setText('Use my NAPS2 installation')
         self.button_manual_install.clicked.connect(self.onCommitManualInstallation)
 
-        # Finally, we can disable NAPS2 support entirely
-        self.label_disable_naps2 = QLabel()
-        self.label_disable_naps2.setWordWrap(True)
-        self.label_disable_naps2.setText(
-            'If you\'d prefer to use a different scanning solution, you can also '
-            'disable NAPS2 integration completely:'
-        )
-
-        self.button_disable_naps2 = QPushButton()
-        self.button_disable_naps2.setText('Disable NAPS2 integration')
-        self.button_disable_naps2.clicked.connect(self.onSelectDisable.emit)
-
         self.layout_naps2 = QVBoxLayout()
         self.layout_naps2.setContentsMargins(12, 12, 12, 12)
         self.layout_naps2.setSpacing(16)
@@ -148,9 +135,6 @@ class InitNAPS2Dialog(QDialog):
         self.layout.addWidget(self.label_manual_install)
         self.layout.addLayout(self.grid_manual_install)
         self.layout.addWidget(self.button_manual_install)
-        self.layout.addSpacing(8)
-        self.layout.addWidget(self.label_disable_naps2)
-        self.layout.addWidget(self.button_disable_naps2)
 
     def sizeHint(self):
         return QSize(480, 100)

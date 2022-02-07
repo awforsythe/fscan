@@ -9,7 +9,7 @@ from PySide6.QtCore import QObject, Signal, Slot
 from .. import g
 from ..config import get_config_var
 from ..core.naps2.data import NAPS2Install
-from ..core.naps2.install import disable_naps2, set_configured_naps2_install, get_configured_naps2_install, get_suggested_naps2_install, install_naps2_portable
+from ..core.naps2.install import set_configured_naps2_install, get_configured_naps2_install, get_suggested_naps2_install, install_naps2_portable
 from ..core.naps2.scan import invoke_naps2_scan
 
 class ScanWorkerState(Enum):
@@ -27,10 +27,6 @@ class ExitCommand:
 class InitScanCommand:
     def run(self, worker):
         worker.setInstall(None)
-        is_disabled = get_config_var('NAPS2_DISABLED', 'false').lower() in ('true', '1')
-        if is_disabled:
-            g.log.info('NAPS2 scanning is disabled. Remove NAPS2_DISABLED from ~/fscan.ini to re-enable.')
-            return
 
         install: Optional[NAPS2Install] = get_configured_naps2_install()
         if not install:
@@ -52,14 +48,6 @@ class ConfigureScanCommand:
         if not install:
             install = get_suggested_naps2_install()
         worker.promptInstallRequested.emit(install)
-
-
-@dataclass
-class DisableScanCommand:
-    def run(self, worker):
-        disable_naps2()
-        g.log.info('Disabled NAPS2 integration.')
-        worker.command_queue.put(InitScanCommand())
 
 
 @dataclass
@@ -137,9 +125,6 @@ class ScanWorker(QObject):
     @Slot()
     def stop(self):
         self.command_queue.put(ExitCommand())
-
-    def disableNAPS2(self):
-        self.command_queue.put(DisableScanCommand())
 
     def setNAPS2Install(self, install: NAPS2Install):
         self.command_queue.put(SetInstallCommand(install))
