@@ -18,3 +18,9 @@ class NAPS2Install:
         if app_dirname.lower() == 'app' and data_dirname.lower() == 'data':
             return os.path.normpath(app_parent_dir).lower() == os.path.normpath(data_parent_dir).lower()
         return False
+
+
+@dataclass
+class ProfileConfig:
+    front_profile_name: str
+    back_profile_name: str

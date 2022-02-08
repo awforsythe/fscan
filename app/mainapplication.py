@@ -88,7 +88,7 @@ class MainApplication(QApplication):
         self.scan_worker.requestConfigure()
     
     def onScanRequested(self):
-        self.scan_worker.requestScan()
+        self.scan_worker.requestScan(is_front=True)
 
     def showInitNAPS2Dialog(self, install):
         if self.init_naps2_dialog:
