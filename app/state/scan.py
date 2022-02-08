@@ -81,10 +81,10 @@ class ScanCommand:
             return
 
         worker.is_scanning = True
-        worker.stateChanged.emit(worker.state)
+        worker.stateChanged.emit(worker.state, worker.install)
         invoke_naps2_scan(worker.install, 'TEST', 'E:\\fscan_files\\test\\scan_001.png')
         worker.is_scanning = False
-        worker.stateChanged.emit(worker.state)
+        worker.stateChanged.emit(worker.state, worker.install)
 
 
 class ScanWorker(QObject):
@@ -93,7 +93,7 @@ class ScanWorker(QObject):
 
     promptInstallRequested = Signal(object)
 
-    stateChanged = Signal(object)
+    stateChanged = Signal(object, object)
 
     def __init__(self):
         super().__init__()
@@ -113,7 +113,7 @@ class ScanWorker(QObject):
     def setInstall(self, install):
         assert self.state != ScanWorkerState.SCANNING
         self.install = install
-        self.stateChanged.emit(self.state)
+        self.stateChanged.emit(self.state, self.install)
 
     @Slot()
     def start(self):
