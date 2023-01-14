@@ -8,6 +8,7 @@ from ..state.scan import ScanWorkerState
 class ScanControlGroup(QWidget):
 
     configureRequested = Signal()
+    configureProfilesRequested = Signal()
     scanRequested = Signal()
 
     def __init__(self):
@@ -32,6 +33,7 @@ class ScanControlGroup(QWidget):
 
         self.button_profiles = QPushButton()
         self.button_profiles.setText('...')
+        self.button_profiles.clicked.connect(self.configureProfilesRequested)
         self.button_profiles.setEnabled(False)
 
         self.label_status = QLabel()

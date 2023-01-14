@@ -10,7 +10,7 @@ from .. import g
 from ..config import get_config_var
 from ..core.naps2.data import NAPS2Install, ProfileConfig
 from ..core.naps2.install import set_configured_naps2_install, get_configured_naps2_install, get_suggested_naps2_install, install_naps2_portable
-from ..core.naps2.profile import list_naps2_device_ids_and_names, list_naps2_profile_names, get_profile_config, set_profile_config
+from ..core.naps2.profile import get_profile_config, set_profile_config
 from ..core.naps2.scan import invoke_naps2_scan
 
 class ScanWorkerState(Enum):
@@ -78,6 +78,16 @@ class AutoInstallCommand:
 
 
 @dataclass
+class ConfigureProfilesCommand:
+    def run(self, worker):
+        if not worker.install:
+            g.log.error('NAPS2 installation is not configured.')
+            return
+
+        worker.promptConfigureProfilesRequested.emit(worker.install, worker.profile_config)
+
+
+@dataclass
 class ScanCommand:
     is_front: bool
     def run(self, worker):
@@ -105,6 +115,7 @@ class ScanWorker(QObject):
     crashed = Signal(str)
 
     promptInstallRequested = Signal(object)
+    promptConfigureProfilesRequested = Signal(object, object)
 
     stateChanged = Signal(object, object, object)
 
@@ -154,6 +165,9 @@ class ScanWorker(QObject):
     
     def requestConfigure(self):
         self.command_queue.put(ConfigureScanCommand())
+
+    def requestConfigureProfiles(self):
+        self.command_queue.put(ConfigureProfilesCommand())
 
     def requestScan(self, is_front):
         self.command_queue.put(ScanCommand(is_front))

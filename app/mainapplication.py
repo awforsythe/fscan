@@ -16,6 +16,7 @@ from .state.scan import ScanWorker
 from .gui.darkpalette import DarkPalette
 from .gui.mainwindow import MainWindow
 from .gui.initnaps2dialog import InitNAPS2Dialog
+from .gui.configureprofilesdialog import ConfigureProfilesDialog
 
 
 class MainApplication(QApplication):
@@ -47,13 +48,16 @@ class MainApplication(QApplication):
         self.scan_thread = QThread()
         self.scan_worker = ScanWorker()
         self.scan_worker.promptInstallRequested.connect(self.onPromptInstall)
+        self.scan_worker.promptConfigureProfilesRequested.connect(self.onPromptConfigureProfiles)
 
         controls = self.main.w.controls
         controls.scan.configureRequested.connect(self.onConfigureRequested)
+        controls.scan.configureProfilesRequested.connect(self.onConfigureProfilesRequested)
         controls.scan.scanRequested.connect(self.onScanRequested)
         self.scan_worker.stateChanged.connect(controls.scan.onScanWorkerStateChanged)
 
         self.init_naps2_dialog = None
+        self.configure_profiles_dialog = None
 
         g.log.info('FScan v%s | %s | %s' % (VERSION, time.strftime('%r | %A, %B %d, %Y'), socket.gethostname()))
         g.log.debug('Running from %s%s' % (sys.executable, ' (frozen)' if hasattr(sys, 'frozen') else ''))
@@ -84,14 +88,20 @@ class MainApplication(QApplication):
             g.log.debug('No existing NAPS2 installation found.')
         self.showInitNAPS2Dialog(suggested_install)
 
+    def onPromptConfigureProfiles(self, install, profile_config):
+        self.showConfigureProfilesDialog(install, profile_config)
+
     def onConfigureRequested(self):
         self.scan_worker.requestConfigure()
+
+    def onConfigureProfilesRequested(self):
+        self.scan_worker.requestConfigureProfiles()
     
     def onScanRequested(self):
         self.scan_worker.requestScan(is_front=True)
 
     def showInitNAPS2Dialog(self, install):
-        if self.init_naps2_dialog:
+        if self.init_naps2_dialog or self.configure_profiles_dialog:
             return
 
         self.init_naps2_dialog = InitNAPS2Dialog(install)
@@ -114,6 +124,17 @@ class MainApplication(QApplication):
             self.init_naps2_dialog.close()
             self.init_naps2_dialog = None
             self.scan_worker.setNAPS2Install(install)
+
+    def showConfigureProfilesDialog(self, install, profile_config):
+        if self.init_naps2_dialog or self.configure_profiles_dialog:
+            return
+
+        self.configure_profiles_dialog = ConfigureProfilesDialog(install, profile_config)
+        self.configure_profiles_dialog.finished.connect(self.onConfigureProfilesDialogClosed)
+        self.configure_profiles_dialog.show()
+
+    def onConfigureProfilesDialogClosed(self):
+        self.configure_profiles_dialog = None
 
     def onThreadCrash(self, s):
         lines = ['A problem has occurred and this application must exit.', '']

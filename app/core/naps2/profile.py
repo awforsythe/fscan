@@ -4,7 +4,7 @@ from typing import Optional
 
 from ... import g
 from ...config import get_config_var, update_config
-from .data import ProfileConfig
+from .data import ProfileConfig, ScanDevice
 
 
 def _parse_profiles_xml(data_dir: str) -> Optional[ET.Element]:
@@ -17,7 +17,7 @@ def _parse_profiles_xml(data_dir: str) -> Optional[ET.Element]:
         return root
 
 
-def list_naps2_device_ids_and_names(data_dir: str) -> list[tuple[str, str]]:
+def list_naps2_devices(data_dir: str) -> list[ScanDevice]:
     profiles_xml = _parse_profiles_xml(data_dir)
     if not profiles_xml:
         return []
@@ -29,7 +29,11 @@ def list_naps2_device_ids_and_names(data_dir: str) -> list[tuple[str, str]]:
         id_elem, name_elem = device_elem.find('ID'), device_elem.find('Name')
         assert id_elem is not None and name_elem is not None
         device_names_by_id[id_elem.text] = name_elem.text
-    return sorted(device_names_by_id.items(), key=lambda x: x[1])
+
+    devices = []
+    for device_id, device_name in sorted(device_names_by_id.items(), key=lambda x: x[1]):
+        devices.append(ScanDevice(device_id, device_name))
+    return devices
 
 
 def list_naps2_profile_names(data_dir: str) -> list[str]:

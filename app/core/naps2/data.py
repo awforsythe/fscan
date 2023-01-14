@@ -21,6 +21,12 @@ class NAPS2Install:
 
 
 @dataclass
+class ScanDevice:
+    uuid: str
+    name: str
+
+
+@dataclass
 class ProfileConfig:
     front_profile_name: str
     back_profile_name: str
